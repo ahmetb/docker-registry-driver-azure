@@ -71,11 +71,7 @@ class Storage(driver.Base):
 
     def stream_read(self, path, bytes_range=None):
         logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
-
-        buffer_size = 5 * 1024 * 1024
-        if buffer_size > self.buffer_size:
-        	self.buffer_size = buffer_size
-
+        
         try:
             f = io.BytesIO()
             self._blob.get_blob_to_file(self._container, path, f)
