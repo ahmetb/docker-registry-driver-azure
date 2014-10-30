@@ -110,7 +110,16 @@ class Storage(driver.Base):
 
     def list_directory(self, path=None):
         logger.info('list_directory: path={0}'.format(path))
-        raise exceptions.NotImplementedError 
+
+        if not path.endswith('/'):
+        	path += '/' # path=a would list a/b.txt as well as 'abc.txt'
+
+        blobs = list(self._blob(self._container, path))
+        if not blobs:
+        	raise exceptions.FileNotFoundError('%s is not there' % path)
+    	
+    	return [b.name for  b in blobs]
+
         # prefix = ''
         # if path:
         #     prefix = '%s/' % path
