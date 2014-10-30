@@ -77,7 +77,7 @@ class Storage(driver.Base):
 
         try:
             with io.BytesIO() as f:
-	            self._blob.get_blob_to_file(self._container, path, f, progress)
+                self._blob.get_blob_to_file(self._container, path, f, progress)
                 if bytes_range:
                     f.seek(bytes_range[0])
                     total_size = bytes_range[1] - bytes_range[0] + 1
