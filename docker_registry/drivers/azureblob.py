@@ -17,6 +17,7 @@ from docker_registry.core import driver
 from docker_registry.core import exceptions
 from docker_registry.core import lru
 
+import azure
 from azure.storage import BlobService
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ class Storage(driver.Base):
 
     	self._config = config
         self._blob = BlobService(account_name=self._config.azure_account_name, account_key=self._config.azure_account_key)
+        self._container = self._config.azure_storage_container
 
         logger.info('init with path={0}'.format(path, config))
         logger.info('azure_account_name={0}'.format(self._config.azure_account_name))
@@ -43,7 +45,7 @@ class Storage(driver.Base):
     def _init_container(self):
         '''Initializes image container on Azure blob storage.
         '''
-        created = self._blob.create_container(self._config.azure_storage_container, x_ms_blob_public_access='blob', fail_on_exist=False)
+        created = self._blob.create_container(self._container, x_ms_blob_public_access='blob', fail_on_exist=False)
         if created:
             logger.info('Created blob container.')
         else:
@@ -61,22 +63,31 @@ class Storage(driver.Base):
     @lru.get
     def get_content(self, path):
         logger.info('get_content: path={0}'.format(path))
-        path = self._init_path(path)
-        try:
-            with open(path, mode='rb') as f:
-                d = f.read()
-        except Exception:
-            raise exceptions.FileNotFoundError('%s is not there' % path)
 
-        return d
+        try:
+	        return self._blob.get_blob(self._container, path)
+        except azure.WindowsAzureMissingResourceError:
+       		raise exceptions.FileNotFoundError('%s is not there' % path)
+
+        # path = self._init_path(path)
+        # try:
+        #     with open(path, mode='rb') as f:
+        #         d = f.read()
+        # except Exception:
+        #     raise exceptions.FileNotFoundError('%s is not there' % path)
+        # return d
 
     @lru.set
     def put_content(self, path, content):
         logger.info('put_content: path={0} content_size={1}'.format(path, len(content)))
-        path = self._init_path(path, create=True)
-        with open(path, mode='wb') as f:
-            f.write(content)
+
+        self._blob.put_blob(self._container, path, content, 'BlockBlob')
         return path
+
+        # path = self._init_path(path, create=True)
+        # with open(path, mode='wb') as f:
+        #     f.write(content)
+        # return path
 
     def stream_read(self, path, bytes_range=None):
         logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
@@ -144,28 +155,54 @@ class Storage(driver.Base):
 
     def exists(self, path):
         logger.info('exists: path={0}'.format(path))
+        try:
+        	self._blob.get_blob_properties(self._container, path)
+        	return True
+        except azure.WindowsAzureMissingResourceError:
+        	return False
 
-        path = self._init_path(path)
-        return os.path.exists(path)
+    	# path = self._init_path(path)
+        # return os.path.exists(path)    
 
     @lru.remove
     def remove(self, path):
         logger.info('remove: path={0}'.format(path))
 
-        path = self._init_path(path)
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-            return
-        try:
-            os.remove(path)
-        except OSError:
-            raise exceptions.FileNotFoundError('%s is not there' % path)
+        is_blob = self.exists(path)
+        if is_blob:
+        	self._blob.delete_blob(self._container, path)
+        	logger.info("Deleted blob: {0}".format(path))
+        	return
+
+		logger.info("Not a blob, seeing if dir: {0}".format(path))
+
+        exists = False
+        blobs = list(self._blob.list_blobs(self._container, path)
+        if not blobs:
+        	raise exceptions.FileNotFoundError('%s is not there' % path)
+        for b in blobs:
+        	self._blob.delete_blob(self._container, b.name)
+
+        # path = self._init_path(path)
+        # if os.path.isdir(path):
+        #     shutil.rmtree(path)
+        #     return
+        # try:
+        #     os.remove(path)
+        # except OSError:
+        #     raise exceptions.FileNotFoundError('%s is not there' % path)
 
     def get_size(self, path):
         logger.info('get_size: path=%s'.format(path))
 
-        path = self._init_path(path)
         try:
-            return os.path.getsize(path)
-        except OSError:
-            raise exceptions.FileNotFoundError('%s is not there' % path)
+	        properties = self._blob.get_blob_properties(self._container, path)
+	        return long(properties['content-length'])
+	    except azure.WindowsAzureMissingResourceError:
+	    	raise exceptions.FileNotFoundError('%s is not there' % path)
+
+        # path = self._init_path(path)
+        # try:
+        #     return os.path.getsize(path)
+        # except OSError:
+        #     raise exceptions.FileNotFoundError('%s is not there' % path)
