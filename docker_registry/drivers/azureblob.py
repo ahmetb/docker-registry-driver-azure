@@ -73,11 +73,15 @@ class Storage(driver.Base):
         logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
 
         def progress(cur, total):
-        	logger.info("Progress: {0}/{1} (%{2})", cur, total, 100.0*cur/total)
+        	logger.info("Progress: {0}/{1} (percentage:{2})".format(cur, total, 100.0*cur/total))
+
+        buffer_size = 5 * 1024 * 1024
+        if buffer_size > self.buffer_size:
+        	self.buffer_size = buffer_size
 
         try:
             with io.BytesIO() as f:
-                self._blob.get_blob_to_file(self._container, path, f, progress)
+                self._blob.get_blob_to_file(self._container, path, f, progress_callback=progress)
                 if bytes_range:
                     f.seek(bytes_range[0])
                     total_size = bytes_range[1] - bytes_range[0] + 1
