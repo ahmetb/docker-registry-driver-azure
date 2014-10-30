@@ -13,13 +13,19 @@
 # limitations under the License.
 
 FROM registry
-
-RUN pip install azure
-
-ENV DOCKER_REGISTRY_CONFIG /azure-driver/config/config_sample.yml
+MAINTAINER Ahmet Alp Balkan <ahmetalpbalkan at gmail.com>
 
 ENV SETTINGS_FLAVOR azureblob
 
+# Install Azure Python SDK
+RUN pip install azure
+
+# This should remain until config_sample.yml in docker/docker-registry
+# gets the 'azure' section 'registry' image on Docker Hub is updated
+# with the change.
+ENV DOCKER_REGISTRY_CONFIG /azure-driver/config/config_sample.yml
+
 COPY . /azure-driver
 
-RUN cd /azure-driver && python ./setup.py install
+WORKDIR /azure-driver
+RUN python ./setup.py install
