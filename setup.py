@@ -17,8 +17,8 @@ from distutils.core import setup
 setup(name='docker-registry-driver-azure',
       version='1.0',
       description='Azure driver for Docker registry.',
-      author='',
-      author_email='',
-      url='',
+      author='Ahmet Alp Balkan',
+      author_email='ahmetalpbalkan@gmail.com',
+      url='https://github.com/ahmetalpbalkan/docker-registry-driver-azure',
       packages=['docker_registry.drivers'],
      )
