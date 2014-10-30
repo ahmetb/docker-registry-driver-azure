@@ -71,7 +71,7 @@ class Storage(driver.Base):
 
     def stream_read(self, path, bytes_range=None):
         logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
-        
+
         try:
             f = io.BytesIO()
             self._blob.get_blob_to_file(self._container, path, f)
@@ -121,7 +121,7 @@ class Storage(driver.Base):
         blobs = list(self._blob.list_blobs(self._container, path))
         if not blobs:
             raise exceptions.FileNotFoundError('%s is not there' % path)
-        
+
         return [b.name for  b in blobs]
 
     def exists(self, path):
