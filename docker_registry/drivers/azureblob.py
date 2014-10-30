@@ -114,7 +114,7 @@ class Storage(driver.Base):
         if not path.endswith('/'):
         	path += '/' # path=a would list a/b.txt as well as 'abc.txt'
 
-        blobs = list(self._blob(self._container, path))
+        blobs = list(self._blob.list_blobs(self._container, path))
         if not blobs:
         	raise exceptions.FileNotFoundError('%s is not there' % path)
     	
