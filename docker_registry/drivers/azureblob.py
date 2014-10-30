@@ -30,14 +30,14 @@ class Storage(driver.Base):
     def __init__(self, path=None, config=None):
 
     	self._config = config
-        self._blob = BlobService(account_name=self._config.azure_account_name, account_key=self._config.azure_account_key)
-        self._container = self._config.azure_storage_container
 
         logger.info('init with path={0}'.format(path, config))
-        logger.info('azure_account_name={0}'.format(self._config.azure_account_name))
-        logger.info('azure_account_key={0}'.format(self._config.azure_account_key))
-        logger.info('azure_storage_container={0}'.format(config.azure_storage_container))
+        logger.info('azure_storage_account_name={0}'.format(self._config.azure_storage_account_name))
+        logger.info('azure_storage_account_key={0}'.format(self._config.azure_storage_account_key))
+        logger.info('azure_storage_container={0}'.format(self._config.azure_storage_container))
 
+        self._container = self._config.azure_storage_container
+        self._blob = BlobService(account_name=self._config.azure_storage_account_name, account_key=self._config.azure_storage_account_key)
 
         self._init_container()
 
@@ -53,14 +53,6 @@ class Storage(driver.Base):
             logger.info('Container already exists.')
         return created
 
-    def _init_path(self, path=None, create=False):
-        path = os.path.join(self._root_path, path) if path else self._root_path
-        if create is True:
-            dirname = os.path.dirname(path)
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
-        return path
-
     @lru.get
     def get_content(self, path):
         logger.info('get_content: path={0}'.format(path))
@@ -70,25 +62,12 @@ class Storage(driver.Base):
         except azure.WindowsAzureMissingResourceError:
        		raise exceptions.FileNotFoundError('%s is not there' % path)
 
-        # path = self._init_path(path)
-        # try:
-        #     with open(path, mode='rb') as f:
-        #         d = f.read()
-        # except Exception:
-        #     raise exceptions.FileNotFoundError('%s is not there' % path)
-        # return d
-
     @lru.set
     def put_content(self, path, content):
         logger.info('put_content: path={0} content_size={1}'.format(path, len(content)))
 
         self._blob.put_blob(self._container, path, content, 'BlockBlob')
         return path
-
-        # path = self._init_path(path, create=True)
-        # with open(path, mode='wb') as f:
-        #     f.write(content)
-        # return path
 
     def stream_read(self, path, bytes_range=None):
         logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
@@ -127,30 +106,11 @@ class Storage(driver.Base):
     def stream_write(self, path, fp):
         # Size is mandatory
         logger.info('stream_write: path={0} fp={1}'.format(path, fp))
-
-        path = self._init_path(path, create=True)
-        with open(path, mode='wb') as f:
-            try:
-                while True:
-                    buf = fp.read(self.buffer_size)
-                    if not buf:
-                        break
-                    f.write(buf)
-            except IOError:
-                pass
+        self._blob.put_block_blob_from_file(self._container, path, fp)
 
     def list_directory(self, path=None):
         logger.info('list_directory: path={0}'.format(path))
-
-        if not path.endswith('/'):
-        	path += '/' # path=a would list a/b.txt as well as 'abc.txt'
-
-        blobs = list(self._blob(self._container, path))
-        if not blobs:
-        	raise exceptions.FileNotFoundError('%s is not there' % path)
-    	
-    	return [b.name for  b in blobs]
-
+        raise exceptions.NotImplementedError 
         # prefix = ''
         # if path:
         #     prefix = '%s/' % path
@@ -173,9 +133,6 @@ class Storage(driver.Base):
         except azure.WindowsAzureMissingResourceError:
         	return False
 
-    	# path = self._init_path(path)
-        # return os.path.exists(path)    
-
     @lru.remove
     def remove(self, path):
         logger.info('remove: path={0}'.format(path))
@@ -195,15 +152,6 @@ class Storage(driver.Base):
         for b in blobs:
         	self._blob.delete_blob(self._container, b.name)
 
-        # path = self._init_path(path)
-        # if os.path.isdir(path):
-        #     shutil.rmtree(path)
-        #     return
-        # try:
-        #     os.remove(path)
-        # except OSError:
-        #     raise exceptions.FileNotFoundError('%s is not there' % path)
-
     def get_size(self, path):
         logger.info('get_size: path={0}'.format(path))
 
@@ -212,9 +160,3 @@ class Storage(driver.Base):
 	        return long(properties['content-length'])
         except azure.WindowsAzureMissingResourceError:
 	    	raise exceptions.FileNotFoundError('%s is not there' % path)
-
-        # path = self._init_path(path)
-        # try:
-        #     return os.path.getsize(path)
-        # except OSError:
-        #     raise exceptions.FileNotFoundError('%s is not there' % path)
