@@ -1,4 +1,0 @@
-"""
-Azure driver
-"""
-test='hello'
