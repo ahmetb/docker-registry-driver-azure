@@ -9,6 +9,7 @@ Microsoft Azure Blob Storage driver.
 
 """
 
+import io
 import logging
 import os
 import shutil
@@ -91,11 +92,13 @@ class Storage(driver.Base):
 
     def stream_read(self, path, bytes_range=None):
         logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
-        path = self._init_path(path)
-        nb_bytes = 0
-        total_size = 0
+
+        def progress(cur, total):
+        	logger.info("Progress: {0}/{1} (%{2})", cur, total, 100.0*cur/total)
+
         try:
-            with open(path, mode='rb') as f:
+            with io.BytesIO() as f:
+	            self._blob.get_blob_to_file(self._container, path, f, progress)
                 if bytes_range:
                     f.seek(bytes_range[0])
                     total_size = bytes_range[1] - bytes_range[0] + 1
