@@ -72,38 +72,42 @@ class Storage(driver.Base):
     def stream_read(self, path, bytes_range=None):
         logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
 
-        def progress(cur, total):
-        	logger.info("Progress: {0}/{1} (percentage:{2})".format(cur, total, 100.0*cur/total))
-
         buffer_size = 5 * 1024 * 1024
         if buffer_size > self.buffer_size:
         	self.buffer_size = buffer_size
 
         try:
-            with io.BytesIO() as f:
-                self._blob.get_blob_to_file(self._container, path, f, progress_callback=progress)
+            f = io.BytesIO()
+            self._blob.get_blob_to_file(self._container, path, f)
+
+            if bytes_range:
+                f.seek(bytes_range[0])
+                total_size = bytes_range[1] - bytes_range[0] + 1
+            else:
+                f.seek(0)
+
+            while True:
+                buf = None
                 if bytes_range:
-                    f.seek(bytes_range[0])
-                    total_size = bytes_range[1] - bytes_range[0] + 1
-                while True:
-                    buf = None
-                    if bytes_range:
-                        # Bytes Range is enabled
-                        buf_size = self.buffer_size
-                        if nb_bytes + buf_size > total_size:
-                            # We make sure we don't read out of the range
-                            buf_size = total_size - nb_bytes
-                        if buf_size > 0:
-                            buf = f.read(buf_size)
-                            nb_bytes += len(buf)
-                        else:
-                            # We're at the end of the range
-                            buf = ''
+                    # Bytes Range is enabled
+                    buf_size = self.buffer_size
+                    if nb_bytes + buf_size > total_size:
+                        # We make sure we don't read out of the range
+                        buf_size = total_size - nb_bytes
+                    if buf_size > 0:
+                        buf = f.read(buf_size)
+                        nb_bytes += len(buf)
                     else:
-                        buf = f.read(self.buffer_size)
-                    if not buf:
-                        break
-                    yield buf
+                        # We're at the end of the range
+                        buf = ''
+                else:
+                    buf = f.read(self.buffer_size)
+                    logger.info("Reading {0} bytes from buffer.".format(self.buffer_size))
+                if not buf:
+                    logger.info("Buf was empty.. exiting...")
+                    break
+                logger.info("Yielding...")
+                yield buf
         except IOError:
             raise exceptions.FileNotFoundError('%s is not there' % path)
 
