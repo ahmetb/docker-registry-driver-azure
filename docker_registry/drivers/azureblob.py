@@ -139,19 +139,28 @@ class Storage(driver.Base):
     def list_directory(self, path=None):
         logger.info('list_directory: path={0}'.format(path))
 
-        prefix = ''
-        if path:
-            prefix = '%s/' % path
-        path = self._init_path(path)
-        exists = False
-        try:
-            for d in os.listdir(path):
-                exists = True
-                yield prefix + d
-        except Exception:
-            pass
-        if not exists:
-            raise exceptions.FileNotFoundError('%s is not there' % path)
+        if not path.endswith('/'):
+        	path += '/' # path=a would list a/b.txt as well as 'abc.txt'
+
+        blobs = list(self._blob(self._container, path))
+        if not blobs:
+        	raise exceptions.FileNotFoundError('%s is not there' % path)
+    	
+    	return [b.name for  b in blobs]
+
+        # prefix = ''
+        # if path:
+        #     prefix = '%s/' % path
+        # path = self._init_path(path)
+        # exists = False
+        # try:
+        #     for d in os.listdir(path):
+        #         exists = True
+        #         yield prefix + d
+        # except Exception:
+        #     pass
+        # if not exists:
+        #     raise exceptions.FileNotFoundError('%s is not there' % path)
 
     def exists(self, path):
         logger.info('exists: path={0}'.format(path))
@@ -193,7 +202,7 @@ class Storage(driver.Base):
         #     raise exceptions.FileNotFoundError('%s is not there' % path)
 
     def get_size(self, path):
-        logger.info('get_size: path=%s'.format(path))
+        logger.info('get_size: path={0}'.format(path))
 
         try:
 	        properties = self._blob.get_blob_properties(self._container, path)
