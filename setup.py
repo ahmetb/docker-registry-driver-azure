@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # Copyright Ahmet Alp Balkan <ahmetalpbalkan@gmail.com>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.core import setup
+from setuptools import setup
 
-setup(name='docker-registry-driver-azure',
+setup(name='docker-registry-driver-azureblob',
       version='1.0',
       description='Azure driver for Docker registry.',
+      long_description='Azure driver for Docker registry.',
       author='Ahmet Alp Balkan',
       author_email='ahmetalpbalkan@gmail.com',
+      license='Apache 2.0 License (http://www.apache.org/licenses/LICENSE-2.0.html)'
+      platforms=['Independent'],
       url='https://github.com/ahmetalpbalkan/docker-registry-driver-azure',
       packages=['docker_registry.drivers'],
+      install_requires=['azure']
      )

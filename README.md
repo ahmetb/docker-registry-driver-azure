@@ -10,6 +10,7 @@ Usage:
     docker run -p 5000:5000 \
     	-e AZURE_STORAGE_ACCOUNT_NAME=<my acct> \
     	-e AZURE_STORAGE_ACCOUNT_KEY=<my key> \
+    	-e AZURE_STORAGE_CONTAINER=<container name e.g. registry> \
     	ahmetalpbalkan/registry-azure
 
 License
