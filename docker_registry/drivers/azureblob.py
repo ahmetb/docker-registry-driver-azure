@@ -177,7 +177,7 @@ class Storage(driver.Base):
 		logger.info("Not a blob, seeing if dir: {0}".format(path))
 
         exists = False
-        blobs = list(self._blob.list_blobs(self._container, path)
+        blobs = list(self._blob.list_blobs(self._container, path))
         if not blobs:
         	raise exceptions.FileNotFoundError('%s is not there' % path)
         for b in blobs:
@@ -198,7 +198,7 @@ class Storage(driver.Base):
         try:
 	        properties = self._blob.get_blob_properties(self._container, path)
 	        return long(properties['content-length'])
-	    except azure.WindowsAzureMissingResourceError:
+        except azure.WindowsAzureMissingResourceError:
 	    	raise exceptions.FileNotFoundError('%s is not there' % path)
 
         # path = self._init_path(path)
