@@ -42,18 +42,12 @@ class Storage(driver.Base):
     def __init__(self, path=None, config=None):
 
         self._config = config
-
-        logger.info('init with path={0}'.format(path, config))
-        logger.info('azure_storage_account_name={0}'.format(self._config.azure_storage_account_name))
-        logger.info('azure_storage_account_key={0}'.format(self._config.azure_storage_account_key))
-        logger.info('azure_storage_container={0}'.format(self._config.azure_storage_container))
-
         self._container = self._config.azure_storage_container
-        self._blob = BlobService(account_name=self._config.azure_storage_account_name, account_key=self._config.azure_storage_account_key)
+
+        protocol = 'https' if self._config.azure_use_https else 'http'
+        self._blob = BlobService(account_name=self._config.azure_storage_account_name, account_key=self._config.azure_storage_account_key, protocol=protocol)
 
         self._init_container()
-
-        self._root_path = path or './tmp' # TODO remove
 
     def _init_container(self):
         '''Initializes image container on Azure blob storage.
