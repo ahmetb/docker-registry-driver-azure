@@ -35,34 +35,39 @@ from azure.storage import BlobService
 
 logger = logging.getLogger(__name__)
 
+
 class Storage(driver.Base):
 
     supports_bytes_range = True
 
     def __init__(self, path=None, config=None):
-
         self._config = config
         self._container = self._config.azure_storage_container
 
         protocol = 'https' if self._config.azure_use_https else 'http'
-        self._blob = BlobService(account_name=self._config.azure_storage_account_name, account_key=self._config.azure_storage_account_key, protocol=protocol)
+        acct_name = self._config.azure_storage_account_name
+        acct_key = self._config.azure_storage_account_key
+        self._blob = BlobService(
+            account_name=acct_name, account_key=acct_key, protocol=protocol)
 
         self._init_container()
+        logger.debug("Initialized azureblob storage driver")
 
     def _init_container(self):
-        '''Initializes image container on Azure blob storage.
+        '''Initializes image container on Azure blob storage if the container
+        does not exist.
         '''
-        created = self._blob.create_container(self._container, x_ms_blob_public_access='blob', fail_on_exist=False)
+        created = self._blob.create_container(
+            self._container, x_ms_blob_public_access='blob',
+            fail_on_exist=False)
         if created:
-            logger.info('Created blob container.')
+            logger.info('Created blob container for image registry.')
         else:
-            logger.info('Container already exists.')
+            logger.debug('Registry container already exists.')
         return created
 
     @lru.get
     def get_content(self, path):
-        logger.info('get_content: path={0}'.format(path))
-
         try:
             return self._blob.get_blob(self._container, path)
         except azure.WindowsAzureMissingResourceError:
@@ -70,14 +75,10 @@ class Storage(driver.Base):
 
     @lru.set
     def put_content(self, path, content):
-        logger.info('put_content: path={0} content_size={1}'.format(path, len(content)))
-
         self._blob.put_blob(self._container, path, content, 'BlockBlob')
         return path
 
     def stream_read(self, path, bytes_range=None):
-        logger.info('stream_read: path={0} bytes_range={1}'.format(path, bytes_range))
-
         try:
             f = io.BytesIO()
             self._blob.get_blob_to_file(self._container, path, f)
@@ -104,34 +105,28 @@ class Storage(driver.Base):
                         buf = ''
                 else:
                     buf = f.read(self.buffer_size)
-                    logger.info("Reading {0} bytes from buffer.".format(self.buffer_size))
+
                 if not buf:
-                    logger.info("Buf was empty.. exiting...")
                     break
-                logger.info("Yielding...")
+
                 yield buf
         except IOError:
             raise exceptions.FileNotFoundError('%s is not there' % path)
 
     def stream_write(self, path, fp):
-        # Size is mandatory
-        logger.info('stream_write: path={0} fp={1}'.format(path, fp))
         self._blob.put_block_blob_from_file(self._container, path, fp)
 
     def list_directory(self, path=None):
-        logger.info('list_directory: path={0}'.format(path))
-
         if not path.endswith('/'):
-            path += '/' # path=a would list a/b.txt as well as 'abc.txt'
+            path += '/'  # path=a would list a/b.txt as well as 'abc.txt'
 
         blobs = list(self._blob.list_blobs(self._container, path))
         if not blobs:
             raise exceptions.FileNotFoundError('%s is not there' % path)
 
-        return [b.name for  b in blobs]
+        return [b.name for b in blobs]
 
     def exists(self, path):
-        logger.info('exists: path={0}'.format(path))
         try:
             self._blob.get_blob_properties(self._container, path)
             return True
@@ -140,28 +135,22 @@ class Storage(driver.Base):
 
     @lru.remove
     def remove(self, path):
-        logger.info('remove: path={0}'.format(path))
-
         is_blob = self.exists(path)
         if is_blob:
             self._blob.delete_blob(self._container, path)
-            logger.info("Deleted blob: {0}".format(path))
             return
-
-            logger.info("Not a blob, seeing if dir: {0}".format(path))
 
         exists = False
         blobs = list(self._blob.list_blobs(self._container, path))
         if not blobs:
             raise exceptions.FileNotFoundError('%s is not there' % path)
+
         for b in blobs:
             self._blob.delete_blob(self._container, b.name)
 
     def get_size(self, path):
-        logger.info('get_size: path={0}'.format(path))
-
         try:
             properties = self._blob.get_blob_properties(self._container, path)
-            return long(properties['content-length'])
+            return int(properties['content-length']) # auto-converted to long
         except azure.WindowsAzureMissingResourceError:
             raise exceptions.FileNotFoundError('%s is not there' % path)
