@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup
+from distutils.core import setup
+#from setuptools import setup
 
 setup(name='docker-registry-driver-azureblob',
       version='1.0',
@@ -27,5 +28,5 @@ setup(name='docker-registry-driver-azureblob',
       platforms=['Independent'],
       url='https://github.com/ahmetalpbalkan/docker-registry-driver-azure',
       packages=['docker_registry.drivers'],
-      install_requires=['azure']
+      #install_requires=['azure']
      )
