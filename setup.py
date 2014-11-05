@@ -55,9 +55,9 @@ setuptools.setup(
                  'Topic :: Utilities',
                  'License :: OSI Approved :: Apache Software License'],
     platforms=['Independent'],
-    namespace_packages=['docker_registry', 
+    namespace_packages=['docker_registry',
                         'docker_registry.drivers'],
-    packages=['docker_registry', 
+    packages=['docker_registry',
               'docker_registry.drivers'],
     install_requires=[
         "azure>=0.8.4"

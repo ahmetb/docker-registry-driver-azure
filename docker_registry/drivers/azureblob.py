@@ -151,6 +151,6 @@ class Storage(driver.Base):
     def get_size(self, path):
         try:
             properties = self._blob.get_blob_properties(self._container, path)
-            return int(properties['content-length']) # auto-converted to long
+            return int(properties['content-length'])  # auto-converted to long
         except azure.WindowsAzureMissingResourceError:
             raise exceptions.FileNotFoundError('%s is not there' % path)
