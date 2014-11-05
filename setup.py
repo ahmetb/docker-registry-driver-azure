@@ -25,7 +25,7 @@ __author__ = 'Ahmet Alp Balkan'
 __copyright__ = 'Copyright 2014'
 __credits__ = []
 
-__version__ = '1.1'
+__version__ = '1.1.1'
 __maintainer__ = 'Ahmet Alp Balkan'
 __email__ = 'ahmetalpbalkan@gmail.com'
 
@@ -44,6 +44,7 @@ setuptools.setup(
     maintainer=__maintainer__,
     maintainer_email=__email__,
     url=__url__,
+    license=open('./LICENSE').read(),
     description=__description__,
     download_url=d,
     classifiers=['Development Status :: 4 - Beta',
@@ -59,8 +60,6 @@ setuptools.setup(
                         'docker_registry.drivers'],
     packages=['docker_registry',
               'docker_registry.drivers'],
-    install_requires=[
-        "azure>=0.8.4"
-    ],
+    install_requires=open('./requirements.txt').read(),
     zip_safe=True
 )

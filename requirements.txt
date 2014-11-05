@@ -1,0 +1,2 @@
+docker-registry-core>=2,<3
+azure>=0.8.4
