@@ -25,7 +25,7 @@ __author__ = 'Ahmet Alp Balkan'
 __copyright__ = 'Copyright 2014'
 __credits__ = []
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 __maintainer__ = 'Ahmet Alp Balkan'
 __email__ = 'ahmetalpbalkan@gmail.com'
 
