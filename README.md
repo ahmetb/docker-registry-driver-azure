@@ -13,6 +13,10 @@ Usage:
     	-e AZURE_STORAGE_CONTAINER=<container name e.g. registry> \
     	ahmetalpbalkan/registry-azure
 
+Detailed instructions can be found on Azure Blog:
+[Deploying Your Own Private Docker Registry on Azure](azure-tutorial).
+
+
 License
 =======
 
@@ -32,3 +36,4 @@ limitations under the License.
 
 [docker-registry]: https://github.com/docker/docker-registry
 [hackday]: https://blog.docker.com/2014/10/announcing-docker-global-hack-day-2/
+[azure-tutorial]: http://azure.microsoft.com/blog/2014/11/11/deploying-your-own-private-docker-registry-on-azure/
