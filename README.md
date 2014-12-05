@@ -14,7 +14,7 @@ Usage:
     	ahmetalpbalkan/registry-azure
 
 Detailed instructions can be found on Azure Blog:
-[Deploying Your Own Private Docker Registry on Azure](azure-tutorial).
+[Deploying Your Own Private Docker Registry on Azure][azure-tutorial].
 
 
 License
