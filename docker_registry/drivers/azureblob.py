@@ -47,8 +47,9 @@ class Storage(driver.Base):
         protocol = 'https' if self._config.azure_use_https else 'http'
         acct_name = self._config.azure_storage_account_name
         acct_key = self._config.azure_storage_account_key
+        host_base = self._config.azure_host_base or azure.BLOB_SERVICE_HOST_BASE
         self._blob = BlobService(
-            account_name=acct_name, account_key=acct_key, protocol=protocol)
+            account_name=acct_name, account_key=acct_key, protocol=protocol, host_base=host_base)
 
         self._init_container()
         logger.debug("Initialized azureblob storage driver")
