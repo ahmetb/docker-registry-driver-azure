@@ -10,17 +10,3 @@
 # limitations under the License.
 
 FROM registry
-MAINTAINER Ahmet Alp Balkan <ahmetalpbalkan at gmail.com>
-
-ENV SETTINGS_FLAVOR azureblob
-
-# This should remain until config_sample.yml in docker/docker-registry
-# gets the 'azure' section 'registry' image on Docker Hub is updated
-# with the change.
-ENV DOCKER_REGISTRY_CONFIG /azure-driver/config/config_sample.yml
-
-COPY . /azure-driver
-
-WORKDIR /azure-driver
-
-RUN pip install .
